@@ -138,6 +138,7 @@ const selectSquare = (square) => {
   }
 
   if (checkForBingo()) {
+    // TODO: Open a native HTML modal dialogue instead and deliver joy
     alert("BINGO!");
     resetGame();
     deactivateBingoBoard();
