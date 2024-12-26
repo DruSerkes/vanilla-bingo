@@ -23,6 +23,7 @@
   text-overflow: ellipsis;
   cursor: pointer;
   position: relative;
+  text-align: center;
 }
 
 .hover {

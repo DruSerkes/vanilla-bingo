@@ -5,12 +5,14 @@ const bingoForm = document.querySelector(".bingo-form");
 const gameBoard = document.querySelector(".game-board");
 const inputContainer = document.querySelector(".input-container");
 const bingoSquares = document.querySelectorAll(".bingo-square");
+const freeSpace = document.querySelector("#free-space");
 
 // *** GLOBALS ***
+const FREE_SPACE = "Free Space";
 const INITIAL_BINGO_BOARD = [
   [],
   [],
-  [, , { text: "Free Space", selected: true }, ,],
+  [, , { text: FREE_SPACE, selected: true }, ,],
   [],
   [],
 ];
@@ -46,16 +48,28 @@ function incrementNumEntries() {
 }
 
 function checkIsReady() {
-  return bingoBoard.every((row) => row.every((square) => square));
+  return bingoBoard.every((row) =>
+    row.every((square) => Boolean(square?.text))
+  );
 }
 
-function resetGame() {
+function resetBingoBoardUI() {
   numEntries.textContent = 0;
-  bingoBoard = [...INITIAL_BINGO_BOARD];
-  bingoSquares.forEach((square) => {
+
+  Array.from(bingoSquares).forEach((square, i) => {
+    const isMiddleSquare = i === Math.floor(bingoSquares.length / 2);
+    if (isMiddleSquare) {
+      return;
+    }
+
     square.textContent = "";
     square.classList.remove("selected");
   });
+}
+
+function resetGame() {
+  bingoBoard = [...INITIAL_BINGO_BOARD];
+  resetBingoBoardUI();
 }
 
 function checkForBingo() {
@@ -65,8 +79,6 @@ function checkForBingo() {
   const diag2 = bingoBoard.map((row, i) => row[4 - i]);
 
   const lines = [...rows, ...cols, diag1, diag2];
-
-  console.log({ rows, cols, diag1, diag2, lines });
 
   for (const line of lines) {
     if (line.every((square) => square.selected)) {
@@ -108,8 +120,12 @@ const removeHoverClass = (square) => {
 };
 
 const selectSquare = (square) => {
+  if (square === freeSpace) return;
+
   const row = parseInt(square.getAttribute("data-row"));
   const col = parseInt(square.getAttribute("data-col"));
+
+  if (!bingoBoard[row][col]) return;
 
   if (square.classList.contains("selected")) {
     square.classList.remove("selected");
@@ -139,11 +155,7 @@ function activateBingoBoard() {
 
 function deactivateBingoBoard() {
   bingoSquares.forEach((square) => {
-    square.classList.remove("hover", "selected");
-    square.textContent = "";
-    square.removeEventListener("mouseenter", addHoverClass);
-    square.removeEventListener("mouseleave", removeHoverClass);
-    square.removeEventListener("click", selectSquare);
+    square.classList.remove("hover");
   });
 }
 
@@ -157,6 +169,9 @@ bingoSquares.forEach((square, i) => {
 // Load bingo board from local storage
 const storedBingoBoard = JSON.parse(localStorage.getItem(BINGO_BOARD_KEY));
 if (storedBingoBoard) {
+  numEntries.textContent = storedBingoBoard
+    .flat()
+    .filter((square) => square).length;
   bingoBoard = storedBingoBoard;
   bingoBoard.forEach((row, i) => {
     row.forEach((square, j) => {
